@@ -1,4 +1,4 @@
-package com.ace.estore.inventory.dto.request;
+package com.ace.estore.inventory.dto.request.inventory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

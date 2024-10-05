@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ace.estore.inventory.dto.request.CategoryRequestDto;
-import com.ace.estore.inventory.dto.request.ItemRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.response.CategoryResponseDto;
 import com.ace.estore.inventory.dto.response.ItemResponseDto;
 import com.ace.estore.inventory.exception.ResourceExistsException;

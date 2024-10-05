@@ -2,8 +2,8 @@ package com.ace.estore.inventory.service.helper;
 
 import org.springframework.stereotype.Component;
 
-import com.ace.estore.inventory.dto.request.CategoryRequestDto;
-import com.ace.estore.inventory.dto.request.ItemRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.entity.ItemCategory;
 

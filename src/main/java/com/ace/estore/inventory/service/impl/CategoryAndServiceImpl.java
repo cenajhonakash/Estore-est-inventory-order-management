@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.ace.estore.inventory.dto.mapper.CategoryResponseDtoMapper;
 import com.ace.estore.inventory.dto.mapper.ItemResponseDtoMapper;
-import com.ace.estore.inventory.dto.request.CategoryRequestDto;
-import com.ace.estore.inventory.dto.request.ItemRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.response.CategoryResponseDto;
 import com.ace.estore.inventory.dto.response.ItemResponseDto;
 import com.ace.estore.inventory.entity.Item;
