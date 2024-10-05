@@ -1,14 +1,26 @@
 package com.ace.estore.inventory.service.helper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ace.estore.inventory.dto.ItemStockDto;
+import com.ace.estore.inventory.dto.StockUpdateDetailsDto;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.entity.ItemCategory;
+import com.ace.estore.inventory.entity.resourcing.ItemStock;
+import com.ace.estore.inventory.entity.resourcing.StockUpdateDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class InventoryHelper {
+
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	public ItemCategory buildCategoryEntity(CategoryRequestDto categoryDto) {
 		return ItemCategory.builder().title(categoryDto.title()).description(categoryDto.description())
@@ -49,6 +61,18 @@ public class InventoryHelper {
 		if (itemDto.category() != null && itemCategory != null)
 			item.setCategory(itemCategory);
 		return item;
+	}
+
+	public ItemStock buildItemStockEntity(ItemStockDto itemStockDto) {
+		return ItemStock.builder().itemId(itemStockDto.itemId()).storeNumber(itemStockDto.storeNumber())
+				.stockQuantity(itemStockDto.stockQuantity()).thresholdLimit(itemStockDto.thresholdLimit())
+				.updateDetails(itemStockDto.updateDetails() != null && !itemStockDto.updateDetails().isEmpty() ? null
+						: buildUpdateEntity(itemStockDto.updateDetails()))
+				.build();
+	}
+
+	private List<StockUpdateDetails> buildUpdateEntity(List<StockUpdateDetailsDto> updateDetails) {
+		return updateDetails.stream().map(dto -> mapper.mapDtoToEntity(dto)).collect(Collectors.toList());
 	}
 
 }

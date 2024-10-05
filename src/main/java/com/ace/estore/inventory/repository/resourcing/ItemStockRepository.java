@@ -1,4 +1,4 @@
-package com.ace.estore.inventory.repository;
+package com.ace.estore.inventory.repository.resourcing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

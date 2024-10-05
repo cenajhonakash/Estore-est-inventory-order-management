@@ -1,4 +1,4 @@
-package com.ace.estore.inventory.service.impl;
+package com.ace.estore.inventory.service.impl.itemAndStock;
 
 import java.util.Optional;
 
