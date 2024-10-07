@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -31,7 +33,7 @@ public class ItemStock {
 	@Id
 	private Integer itemId;
 	@Id
-	private Integer storeNumber;
+	private String storeNumber;
 
 	private Integer stockQuantity;
 	/*
@@ -41,6 +43,8 @@ public class ItemStock {
 	 */
 	private Integer thresholdLimit;
 
-	@OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(targetEntity = StockUpdateDetails.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumns({ @JoinColumn(name = "item_id", referencedColumnName = "item_id"),
+			@JoinColumn(name = "store_number", referencedColumnName = "store_number") })
 	private List<StockUpdateDetails> updateDetails;
 }

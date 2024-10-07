@@ -5,11 +5,21 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Builder
 @JsonInclude(Include.NON_NULL)
-public record ItemStockDto(Integer itemId, Integer storeNumber, Integer stockQuantity, Integer thresholdLimit,
-		List<StockUpdateDetailsDto> updateDetails) {
-
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class ItemStockDto {
+	private Integer itemId;
+	private String storeNumber;
+	private Integer stockQuantity;
+	private Integer thresholdLimit;
+	private List<StockUpdateDetailsDto> orderUpdateDetails;// this is for response
+	private StockUpdateDetailsDto updateDetail;// this is for request
 }

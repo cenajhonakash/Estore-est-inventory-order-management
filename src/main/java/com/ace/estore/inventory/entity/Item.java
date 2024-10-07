@@ -5,8 +5,6 @@ package com.ace.estore.inventory.entity;
  */
 import java.time.LocalDateTime;
 
-import com.ace.estore.inventory.entity.resourcing.ItemStock;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,9 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -59,14 +55,9 @@ public class Item {
 	private LocalDateTime updateDate;
 
 	private String image;
-    
-	@OneToOne
-	@JoinColumns({ @JoinColumn(name = "item_id", referencedColumnName = "item_id"),
-			@JoinColumn(name = "store_number", referencedColumnName = "store_number") })
-	private ItemStock stock;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "category_id", updatable = false, insertable = true)
+	@JoinColumn(name = "category_id", updatable = false, insertable = true, nullable = false)
     private  ItemCategory category;
 
 	@PrePersist
