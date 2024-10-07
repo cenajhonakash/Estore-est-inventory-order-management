@@ -3,6 +3,7 @@ package com.ace.estore.inventory.entity.resourcing;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -35,6 +36,7 @@ public class ItemStock {
 	@Id
 	private String storeNumber;
 
+	@Column(nullable = false)
 	private Integer stockQuantity;
 	/*
 	 * To check if item amount is less than threshold value of 10. For purpose of

@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 @Data
 public class StockUpdateDetailsDto {
 	private Integer id;
-	private Integer updatedByUser;// req & rs
+	private Integer updatedByUser;
 	private String updatedDate;
 	private Integer credit;
 	private Integer debit;
 	private Integer newStockValue;
-	private OrderDetailsStockUpdateDto orderDetails; // req & res
+	private OrderDetailsStockUpdateDto orderDetails;
 }

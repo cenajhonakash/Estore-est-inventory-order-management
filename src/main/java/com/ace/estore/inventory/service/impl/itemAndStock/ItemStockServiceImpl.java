@@ -14,6 +14,8 @@ import com.ace.estore.inventory.dto.ItemStockDto;
 import com.ace.estore.inventory.dto.StockUpdateDetailsDto;
 import com.ace.estore.inventory.dto.mapper.ItemStockDtoMapper;
 import com.ace.estore.inventory.dto.mapper.StockUpdateDetailsMapper;
+import com.ace.estore.inventory.dto.request.inventory.ItemStockRequestDto;
+import com.ace.estore.inventory.dto.request.inventory.StockUpdateDetailsRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderDetailsStockUpdateDto;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.entity.resourcing.ItemStock;
@@ -53,96 +55,111 @@ public class ItemStockServiceImpl implements ItemStockService {
 
 	@Override
 	@Transactional(rollbackOn = Exception.class)
-	public ItemStockDto addItemStock(ItemStockDto itemStockDto)
+	public ItemStockDto addItemStock(ItemStockRequestDto itemStockDto)
 			throws ResourceExistsException, ResourceNotFoundException, GeneralException, ValidationException {
 		helper.validateMandatoryAttributesForNewStock(itemStockDto);
 		Optional<ItemStock> itemStock = itemStockRepository
-				.findById(new ItemStockId(itemStockDto.getItemId(), itemStockDto.getStoreNumber()));
+				.findById(new ItemStockId(itemStockDto.itemId(), itemStockDto.storeNumber()));
 		if (itemStock.isPresent()) {
-			log.info("Stock details already present for item: {} & store: {}", itemStockDto.getItemId(),
-					itemStockDto.getStoreNumber());
+			log.info("Stock details already present for item: {} & store: {}", itemStockDto.itemId(),
+					itemStockDto.storeNumber());
 			throw new ResourceExistsException("Stock details already existing for store: "
-					+ itemStockDto.getStoreNumber() + " & item: " + itemStockDto.getItemId());
+					+ itemStockDto.storeNumber() + " & item: " + itemStockDto.itemId());
 		}
-		Optional<Item> item = itemRepo.findById(itemStockDto.getItemId());
+		Optional<Item> item = itemRepo.findById(itemStockDto.itemId());
 		if (item.isEmpty()) {
 			throw new ResourceNotFoundException(
 					"Cannot add stock details as item information not present for item id: {}"
-							+ itemStockDto.getItemId());
+							+ itemStockDto.itemId());
 		}
-		ItemStock itemStockToSave = helper.buildItemStockEntity(itemStockDto);
-		itemStockToSave
-				.setUpdateDetails(buildStockUpdateDetailsForNewItem(itemStockToSave, itemStockDto));
+		ItemStock itemStockToSave = ItemStock.builder().itemId(itemStockDto.itemId())
+				.storeNumber(itemStockDto.storeNumber())
+				.thresholdLimit(itemStockDto.thresholdLimit()).build();
+		itemStockToSave.setUpdateDetails(buildStockUpdateDetailsForNewItem(itemStockToSave, itemStockDto));
+		itemStockToSave.setStockQuantity(itemStockToSave.getUpdateDetails()
+				.get(itemStockToSave.getUpdateDetails().size() - 1).getNewStockValue());
 		ItemStock stock = itemStockRepository.save(itemStockToSave);
 		return buildItemStockResponseDto(stock);
 	}
 
 	private List<StockUpdateDetails> buildStockUpdateDetailsForNewItem(ItemStock itemStockToSave,
-			ItemStockDto itemStockDto) {
+			ItemStockRequestDto itemStockDto) {
 		List<StockUpdateDetails> updateDetailList = new ArrayList<>();
-		updateDetailList.add(StockUpdateDetails.builder().credit(itemStockDto.getStockQuantity())
-				.newStockValue(itemStockDto.getStockQuantity())
-				.updatedByUser(itemStockDto.getUpdateDetail().getUpdatedByUser())
-//				.stock(itemStockToSave)
+		updateDetailList.add(StockUpdateDetails.builder().credit(itemStockDto.updateDetail().credit())
+				.newStockValue(itemStockDto.updateDetail().credit())
+				.updatedByUser(itemStockDto.updateDetail().updatedByUser())
 				.build());
 		return updateDetailList;
 	}
 
-
 	@Override
-	public ItemStockDto updateItemStock(ItemStockDto itemStockDto, Integer itemId, String store)
-			throws GeneralException, ResourceNotFoundException {
-		ItemStock itemStock = itemStockRepository.findById(new ItemStockId(itemId, store))
+	public ItemStockDto updateItemStock(ItemStockRequestDto itemStockDto)
+			throws GeneralException, ResourceNotFoundException, ValidationException {
+
+		helper.validateMandatoryAttributesForNewStock(itemStockDto);
+		ItemStock itemStock = itemStockRepository
+				.findById(new ItemStockId(itemStockDto.itemId(), itemStockDto.storeNumber()))
 				.orElseThrow(() -> new ResourceNotFoundException(
-						"Stock details not found for store: " + store + " & item: " + itemId));
-		if (Objects.nonNull(itemStockDto.getStockQuantity())
-				&& itemStockDto.getStockQuantity() != itemStock.getStockQuantity()) {
-			if (itemStockDto.getStockQuantity() > itemStock.getStockQuantity()) {// increase ItemStock.stockQuantity &
-																					// in stockUpdateDetails
+						"Stock details not found for store: " + itemStockDto.storeNumber() + " & item: "
+								+ itemStockDto.itemId()));
 
-			}
-			if (itemStockDto.getStockQuantity() < itemStock.getStockQuantity()) {// decrease ItemStock.stockQuantity
+		if (Objects.nonNull(itemStockDto.thresholdLimit())
+				&& itemStockDto.thresholdLimit() != itemStock.getThresholdLimit()) {// threshold limit update
+			itemStock.setThresholdLimit(itemStockDto.thresholdLimit());
+		}
 
+		if (Objects.nonNull(itemStockDto.updateDetail().updatedByUser())
+				|| Objects.nonNull(itemStockDto.updateDetail().orderDetails())) {// qty update
+			try {
+				itemStock.getUpdateDetails().add(buildStockUpdateDetails(itemStock.getUpdateDetails(), itemStockDto));
+			} catch (JsonProcessingException e) {
+				throw new GeneralException("Error while writing orderDetails: " + itemStockDto.updateDetail()
+						+ "due to: {}" + e.getMessage());
 			}
-			itemStock.setStockQuantity(itemStockDto.getStockQuantity());
+			itemStock.setStockQuantity(
+					itemStock.getUpdateDetails().get(itemStock.getUpdateDetails().size() - 1).getNewStockValue());
 		}
-		if (Objects.nonNull(itemStockDto.getThresholdLimit())
-				&& itemStockDto.getThresholdLimit() != itemStock.getThresholdLimit()) {
-			itemStock.setThresholdLimit(itemStockDto.getThresholdLimit());
-		}
-		try {
-			itemStock.setUpdateDetails(buildStockUpdateDetails(itemStock.getUpdateDetails(), itemStockDto));
-		} catch (JsonProcessingException e) {
-			throw new GeneralException("Error while writing orderDetails: " + itemStockDto.getUpdateDetail()
-					+ "due to: {}" + e.getMessage());
-		}
-		return buildItemStockResponseDto(itemStock);
+		ItemStock updatedStock = itemStockRepository.save(itemStock);
+		return buildItemStockResponseDto(updatedStock);
 	}
 
-	private List<StockUpdateDetails> buildStockUpdateDetails(List<StockUpdateDetails> updateDetails,
-			ItemStockDto itemStockDto) throws JsonProcessingException {
+	private StockUpdateDetails buildStockUpdateDetails(List<StockUpdateDetails> updateDetails,
+			ItemStockRequestDto itemStockDto) throws JsonProcessingException, ValidationException {
 
-		StockUpdateDetailsDto updateDetailDto = itemStockDto.getUpdateDetail();
-		List<StockUpdateDetails> updateList = new ArrayList<>();
-		StockUpdateDetailsBuilder stockUpdateBuilder = StockUpdateDetails.builder()
-				.updatedByUser(updateDetailDto.getUpdatedByUser())
-				.updatedForOrder(Objects.nonNull(updateDetailDto.getOrderDetails())
-						? objectMapper.writeValueAsString(updateDetailDto.getOrderDetails())
-						: null);
+		StockUpdateDetailsRequestDto updateDetailDto = itemStockDto.updateDetail();
 
-		if (Objects.nonNull(updateDetails)) {
-			if (Objects.nonNull(updateDetailDto.getUpdatedByUser())
-					&& Objects.isNull(updateDetailDto.getOrderDetails())) {
-				// stockUpdateBuilder.newStockValue();
+		if (Objects.nonNull(updateDetailDto.updatedByUser()) && Objects.nonNull(updateDetailDto.orderDetails()))
+			throw new ValidationException("Stock cannot be updated by an order & admin in same transaction");
+
+		if (Objects.nonNull(updateDetailDto.debit()) && Objects.nonNull(updateDetailDto.credit()))
+			throw new ValidationException("Cannot perform debit & credit in same transaction.");
+
+		StockUpdateDetailsBuilder stockUpdateDetailsBuilder = StockUpdateDetails.builder();
+		Integer currentStockValue = updateDetails.get(updateDetails.size() - 1).getNewStockValue();
+		if (Objects.nonNull(updateDetailDto.updatedByUser())) { // Admin is updating manually
+
+			if (Objects.nonNull(updateDetailDto.debit())) {
+				stockUpdateDetailsBuilder.debit(updateDetailDto.debit());
+				stockUpdateDetailsBuilder.newStockValue(
+						currentStockValue - updateDetailDto.debit()); // updating debited new stock value
+			} else {
+				stockUpdateDetailsBuilder.credit(updateDetailDto.credit());
+				stockUpdateDetailsBuilder.newStockValue(
+						currentStockValue + updateDetailDto.credit()); // updating credited new stock value
 			}
-			updateDetails.add(null);
-		} else {
+			stockUpdateDetailsBuilder.updatedByUser(updateDetailDto.updatedByUser());
+		} else if (Objects.nonNull(updateDetailDto.orderDetails())) {// Stock update(Debit) came via customer order
+			stockUpdateDetailsBuilder.debit(updateDetailDto.orderDetails().sourcedQty());
+			stockUpdateDetailsBuilder.newStockValue(currentStockValue - updateDetailDto.orderDetails().sourcedQty());
+			stockUpdateDetailsBuilder
+					.updatedForOrder(objectMapper.writeValueAsString(updateDetailDto.orderDetails())).build();
 		}
-		return null;
+		return stockUpdateDetailsBuilder.build();
 	}
+
 
 	@Override
-	public List<ItemStockDto> getItemStock(Integer itemId, String storeNumber) throws ResourceExistsException {
+	public List<ItemStockDto> getItemStock(Integer itemId, String storeNumber) throws ResourceNotFoundException {
 		List<ItemStock> stockDetails = null;
 		if (Objects.isNull(storeNumber) && Objects.isNull(itemId)) {// both null then get all data
 			stockDetails = itemStockRepository.findAll();
@@ -153,8 +170,8 @@ public class ItemStockServiceImpl implements ItemStockService {
 		} else {
 			Optional<ItemStock> itemStock = itemStockRepository.findById(new ItemStockId(itemId, storeNumber));
 			if (itemStock.isEmpty()) {
-				throw new ResourceExistsException(
-						"Stock details already existing for store: " + storeNumber + " & item: " + itemId);
+				throw new ResourceNotFoundException(
+						"Stock details not found for store: " + storeNumber + " & item: " + itemId);
 			}
 			stockDetails = Arrays.asList(itemStock.get());
 		}

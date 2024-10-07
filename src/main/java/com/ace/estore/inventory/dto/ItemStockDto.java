@@ -20,6 +20,5 @@ public class ItemStockDto {
 	private String storeNumber;
 	private Integer stockQuantity;
 	private Integer thresholdLimit;
-	private List<StockUpdateDetailsDto> orderUpdateDetails;// this is for response
-	private StockUpdateDetailsDto updateDetail;// this is for request
+	private List<StockUpdateDetailsDto> orderUpdateDetails;
 }
