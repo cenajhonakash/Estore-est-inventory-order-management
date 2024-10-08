@@ -83,7 +83,7 @@ public class InventoryHelper {
 		if (Objects.nonNull(itemStockDto.updateDetail().orderDetails())) {
 			if (Objects.isNull(itemStockDto.updateDetail().orderDetails().orderNo())
 					|| Objects.isNull(itemStockDto.updateDetail().orderDetails().originalReqQty())
-					|| Objects.isNull(itemStockDto.updateDetail().orderDetails().sourcedQty()))
+					|| Objects.isNull(itemStockDto.updateDetail().orderDetails().fulfilledQty()))
 			validationFailed.add("No order information found for stock update.");
 		}
 

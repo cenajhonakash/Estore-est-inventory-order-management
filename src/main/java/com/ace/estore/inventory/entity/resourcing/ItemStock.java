@@ -2,6 +2,8 @@ package com.ace.estore.inventory.entity.resourcing;
 
 import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +40,9 @@ public class ItemStock {
 
 	@Column(nullable = false)
 	private Integer stockQuantity;
+
+	@ColumnDefault(value = "true")
+	private Boolean isLive; // for validating if warehouse still supply then item anymore
 	/*
 	 * To check if item amount is less than threshold value of 10. For purpose of
 	 * replenishment. Have a scheduler every hour that'll email store team to

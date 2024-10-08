@@ -19,6 +19,7 @@ public class ItemStockDto {
 	private Integer itemId;
 	private String storeNumber;
 	private Integer stockQuantity;
+	private Boolean isLive;
 	private Integer thresholdLimit;
 	private List<StockUpdateDetailsDto> orderUpdateDetails;
 }

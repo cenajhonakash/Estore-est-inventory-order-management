@@ -74,7 +74,8 @@ public class ItemStockServiceImpl implements ItemStockService {
 		}
 		ItemStock itemStockToSave = ItemStock.builder().itemId(itemStockDto.itemId())
 				.storeNumber(itemStockDto.storeNumber())
-				.thresholdLimit(itemStockDto.thresholdLimit()).build();
+				.thresholdLimit(itemStockDto.thresholdLimit())
+				.isLive(itemStockDto.enable().equals(Boolean.FALSE) ? false : true).build();
 		itemStockToSave.setUpdateDetails(buildStockUpdateDetailsForNewItem(itemStockToSave, itemStockDto));
 		itemStockToSave.setStockQuantity(itemStockToSave.getUpdateDetails()
 				.get(itemStockToSave.getUpdateDetails().size() - 1).getNewStockValue());
@@ -102,6 +103,12 @@ public class ItemStockServiceImpl implements ItemStockService {
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Stock details not found for store: " + itemStockDto.storeNumber() + " & item: "
 								+ itemStockDto.itemId()));
+		if (itemStock.getIsLive().equals(Boolean.FALSE)) {
+			if (itemStockDto.enable().equals(Boolean.TRUE))
+				itemStock.setIsLive(Boolean.TRUE);
+			else
+				throw new ValidationException("Cannot update stock as it is not live");
+		}
 
 		if (Objects.nonNull(itemStockDto.thresholdLimit())
 				&& itemStockDto.thresholdLimit() != itemStock.getThresholdLimit()) {// threshold limit update
@@ -149,8 +156,8 @@ public class ItemStockServiceImpl implements ItemStockService {
 			}
 			stockUpdateDetailsBuilder.updatedByUser(updateDetailDto.updatedByUser());
 		} else if (Objects.nonNull(updateDetailDto.orderDetails())) {// Stock update(Debit) came via customer order
-			stockUpdateDetailsBuilder.debit(updateDetailDto.orderDetails().sourcedQty());
-			stockUpdateDetailsBuilder.newStockValue(currentStockValue - updateDetailDto.orderDetails().sourcedQty());
+			stockUpdateDetailsBuilder.debit(updateDetailDto.orderDetails().fulfilledQty());
+			stockUpdateDetailsBuilder.newStockValue(currentStockValue - updateDetailDto.orderDetails().fulfilledQty());
 			stockUpdateDetailsBuilder
 					.updatedForOrder(objectMapper.writeValueAsString(updateDetailDto.orderDetails())).build();
 		}

@@ -12,4 +12,8 @@ public interface ItemStockRepository extends JpaRepository<ItemStock, ItemStockI
 	List<ItemStock> findAllByItemId(Integer itemId);
 
 	List<ItemStock> findAllByStoreNumber(String store);
+
+	List<ItemStock> findAllByIsLiveTrue();
+
+	List<ItemStock> findAllByIsLiveFalse();
 }

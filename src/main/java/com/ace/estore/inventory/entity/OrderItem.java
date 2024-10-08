@@ -49,7 +49,8 @@ public class OrderItem {
 	@JoinColumn(name = "order_id", updatable = false)
 	private Order order;
 
-	@OneToMany(mappedBy = "orderItem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OneToMany(targetEntity = OrderUpdateDetails.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@JoinColumn(name = "order_item_id")
 	private List<OrderUpdateDetails> orderUpdates;
 
 	@OneToOne
