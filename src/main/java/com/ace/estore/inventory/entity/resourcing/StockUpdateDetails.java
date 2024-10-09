@@ -41,6 +41,8 @@ public class StockUpdateDetails {
 	private Integer credit;// updatedForOrder.sourcedQty = updatedQuantity. Decrement if updatedForOrder is
 	private Integer debit;// not null(assuming customer order fulfilled from Stock) OR
 
+	private Boolean enabled;
+
 	@Column(nullable = false)
 	private Integer newStockValue;
 

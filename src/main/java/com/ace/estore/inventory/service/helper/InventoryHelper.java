@@ -92,8 +92,8 @@ public class InventoryHelper {
 
 		if (Objects.nonNull(itemStockDto.updateDetail().updatedByUser())) {
 			if (Objects.isNull(itemStockDto.updateDetail().credit())
-					&& Objects.isNull(itemStockDto.updateDetail().debit()))
-				validationFailed.add("Missing credit or debit information.");
+					&& Objects.isNull(itemStockDto.updateDetail().debit()) && Objects.isNull(itemStockDto.enable()))
+				validationFailed.add("Missing credit/debit information or enable stock");
 		}
 		if (!validationFailed.isEmpty())
 			throw new ValidationException("Mandatory Attribute missing: " + validationFailed);

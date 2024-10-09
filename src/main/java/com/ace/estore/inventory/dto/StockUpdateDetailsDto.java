@@ -20,6 +20,7 @@ public class StockUpdateDetailsDto {
 	private String updatedDate;
 	private Integer credit;
 	private Integer debit;
+	private Boolean enabled;
 	private Integer newStockValue;
 	private OrderDetailsStockUpdateDto orderDetails;
 }

@@ -63,19 +63,19 @@ public class ItemStockServiceImpl implements ItemStockService {
 		if (itemStock.isPresent()) {
 			log.info("Stock details already present for item: {} & store: {}", itemStockDto.itemId(),
 					itemStockDto.storeNumber());
-			throw new ResourceExistsException("Stock details already existing for store: "
-					+ itemStockDto.storeNumber() + " & item: " + itemStockDto.itemId());
+			throw new ResourceExistsException("Stock details already existing for store: " + itemStockDto.storeNumber()
+					+ " & item: " + itemStockDto.itemId());
 		}
 		Optional<Item> item = itemRepo.findById(itemStockDto.itemId());
 		if (item.isEmpty()) {
 			throw new ResourceNotFoundException(
-					"Cannot add stock details as item information not present for item id: {}"
-							+ itemStockDto.itemId());
+					"Cannot add stock details as item information not present for item id: {}" + itemStockDto.itemId());
 		}
 		ItemStock itemStockToSave = ItemStock.builder().itemId(itemStockDto.itemId())
-				.storeNumber(itemStockDto.storeNumber())
-				.thresholdLimit(itemStockDto.thresholdLimit())
-				.isLive(itemStockDto.enable().equals(Boolean.FALSE) ? false : true).build();
+				.storeNumber(itemStockDto.storeNumber()).thresholdLimit(itemStockDto.thresholdLimit())
+				.isLive(Objects.nonNull(itemStockDto.enable()) && itemStockDto.enable().equals(Boolean.FALSE) ? false
+						: true)
+				.build();
 		itemStockToSave.setUpdateDetails(buildStockUpdateDetailsForNewItem(itemStockToSave, itemStockDto));
 		itemStockToSave.setStockQuantity(itemStockToSave.getUpdateDetails()
 				.get(itemStockToSave.getUpdateDetails().size() - 1).getNewStockValue());
@@ -88,7 +88,7 @@ public class ItemStockServiceImpl implements ItemStockService {
 		List<StockUpdateDetails> updateDetailList = new ArrayList<>();
 		updateDetailList.add(StockUpdateDetails.builder().credit(itemStockDto.updateDetail().credit())
 				.newStockValue(itemStockDto.updateDetail().credit())
-				.updatedByUser(itemStockDto.updateDetail().updatedByUser())
+				.updatedByUser(itemStockDto.updateDetail().updatedByUser()).enabled(itemStockToSave.getIsLive())
 				.build());
 		return updateDetailList;
 	}
@@ -98,34 +98,50 @@ public class ItemStockServiceImpl implements ItemStockService {
 			throws GeneralException, ResourceNotFoundException, ValidationException {
 
 		helper.validateMandatoryAttributesForNewStock(itemStockDto);
+
 		ItemStock itemStock = itemStockRepository
 				.findById(new ItemStockId(itemStockDto.itemId(), itemStockDto.storeNumber()))
-				.orElseThrow(() -> new ResourceNotFoundException(
-						"Stock details not found for store: " + itemStockDto.storeNumber() + " & item: "
-								+ itemStockDto.itemId()));
-		if (itemStock.getIsLive().equals(Boolean.FALSE)) {
-			if (itemStockDto.enable().equals(Boolean.TRUE))
-				itemStock.setIsLive(Boolean.TRUE);
-			else
-				throw new ValidationException("Cannot update stock as it is not live");
-		}
+				.orElseThrow(() -> new ResourceNotFoundException("Stock details not found for store: "
+						+ itemStockDto.storeNumber() + " & item: " + itemStockDto.itemId()));
+		boolean anyUpdate = false;
 
-		if (Objects.nonNull(itemStockDto.thresholdLimit())
-				&& itemStockDto.thresholdLimit() != itemStock.getThresholdLimit()) {// threshold limit update
-			itemStock.setThresholdLimit(itemStockDto.thresholdLimit());
-		}
-
-		if (Objects.nonNull(itemStockDto.updateDetail().updatedByUser())
-				|| Objects.nonNull(itemStockDto.updateDetail().orderDetails())) {// qty update
-			try {
-				itemStock.getUpdateDetails().add(buildStockUpdateDetails(itemStock.getUpdateDetails(), itemStockDto));
-			} catch (JsonProcessingException e) {
-				throw new GeneralException("Error while writing orderDetails: " + itemStockDto.updateDetail()
-						+ "due to: {}" + e.getMessage());
+		if (itemStock.getIsLive().equals(Boolean.TRUE)) {
+			if (Objects.nonNull(itemStockDto.thresholdLimit())
+					&& itemStockDto.thresholdLimit() != itemStock.getThresholdLimit()) {// threshold limit update
+				itemStock.setThresholdLimit(itemStockDto.thresholdLimit());
+				anyUpdate = true;
 			}
-			itemStock.setStockQuantity(
-					itemStock.getUpdateDetails().get(itemStock.getUpdateDetails().size() - 1).getNewStockValue());
+
+			if (Objects.nonNull(itemStockDto.updateDetail().updatedByUser())
+					|| Objects.nonNull(itemStockDto.updateDetail().orderDetails())) {// qty update
+				try {
+					StockUpdateDetails newStockUpdateDetails = buildStockUpdateDetails(itemStock.getUpdateDetails(),
+							itemStockDto);
+					if (Objects.nonNull(newStockUpdateDetails.getUpdatedByUser())
+							|| (Objects.nonNull(newStockUpdateDetails.getUpdatedForOrder()))) {
+						itemStock.getUpdateDetails().add(newStockUpdateDetails);
+						anyUpdate = true;
+						itemStock.setStockQuantity(itemStock.getUpdateDetails()
+								.get(itemStock.getUpdateDetails().size() - 1).getNewStockValue());
+					}
+				} catch (JsonProcessingException e) {
+					throw new GeneralException("Error while writing orderDetails: " + itemStockDto.updateDetail()
+							+ "due to: {}" + e.getMessage());
+				}
+			}
+		} else if (Objects.nonNull(itemStockDto.enable()) && !itemStock.getIsLive().equals(itemStockDto.enable())) {
+			anyUpdate = true;
+			itemStock.setIsLive(itemStockDto.enable());
+			StockUpdateDetails lastUpdateDetails = itemStock.getUpdateDetails()
+					.get(itemStock.getUpdateDetails().size() - 1);
+			itemStock.getUpdateDetails().add(StockUpdateDetails.builder().credit(lastUpdateDetails.getCredit())
+					.debit(lastUpdateDetails.getDebit()).updatedByUser(itemStockDto.updateDetail().updatedByUser())
+					.newStockValue(lastUpdateDetails.getNewStockValue()).enabled(itemStockDto.enable()).build());
+		} else {
+			throw new ValidationException("Stock is not live anymore.");
 		}
+		if (!anyUpdate)
+			throw new ValidationException("Nothing to update or update not supported with current configuration.");
 		ItemStock updatedStock = itemStockRepository.save(itemStock);
 		return buildItemStockResponseDto(updatedStock);
 	}
@@ -144,26 +160,25 @@ public class ItemStockServiceImpl implements ItemStockService {
 		StockUpdateDetailsBuilder stockUpdateDetailsBuilder = StockUpdateDetails.builder();
 		Integer currentStockValue = updateDetails.get(updateDetails.size() - 1).getNewStockValue();
 		if (Objects.nonNull(updateDetailDto.updatedByUser())) { // Admin is updating manually
-
 			if (Objects.nonNull(updateDetailDto.debit())) {
 				stockUpdateDetailsBuilder.debit(updateDetailDto.debit());
-				stockUpdateDetailsBuilder.newStockValue(
-						currentStockValue - updateDetailDto.debit()); // updating debited new stock value
-			} else {
-				stockUpdateDetailsBuilder.credit(updateDetailDto.credit());
-				stockUpdateDetailsBuilder.newStockValue(
-						currentStockValue + updateDetailDto.credit()); // updating credited new stock value
+				stockUpdateDetailsBuilder.newStockValue(currentStockValue - updateDetailDto.debit());
+				stockUpdateDetailsBuilder.updatedByUser(updateDetailDto.updatedByUser());
 			}
-			stockUpdateDetailsBuilder.updatedByUser(updateDetailDto.updatedByUser());
+			if (Objects.nonNull(updateDetailDto.credit())) {
+				stockUpdateDetailsBuilder.credit(updateDetailDto.credit());
+				stockUpdateDetailsBuilder.newStockValue(currentStockValue + updateDetailDto.credit());
+				stockUpdateDetailsBuilder.updatedByUser(updateDetailDto.updatedByUser());
+
+			}
 		} else if (Objects.nonNull(updateDetailDto.orderDetails())) {// Stock update(Debit) came via customer order
 			stockUpdateDetailsBuilder.debit(updateDetailDto.orderDetails().fulfilledQty());
 			stockUpdateDetailsBuilder.newStockValue(currentStockValue - updateDetailDto.orderDetails().fulfilledQty());
-			stockUpdateDetailsBuilder
-					.updatedForOrder(objectMapper.writeValueAsString(updateDetailDto.orderDetails())).build();
+			stockUpdateDetailsBuilder.updatedForOrder(objectMapper.writeValueAsString(updateDetailDto.orderDetails()))
+					.build();
 		}
 		return stockUpdateDetailsBuilder.build();
 	}
-
 
 	@Override
 	public List<ItemStockDto> getItemStock(Integer itemId, String storeNumber) throws ResourceNotFoundException {
