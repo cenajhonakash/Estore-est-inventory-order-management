@@ -29,21 +29,24 @@ import lombok.Setter;
 @Entity
 @Table(name = "order_item")
 public class OrderItem {
-	
-    @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer orderItemId;
-    
-    private Integer quantity;
-    
-    private Double discount;
-    
-    private Double price;
-    
-	private String status;
 
-    @Column(name = "deliveryDate")
-    private LocalDateTime promisedDeliveryDate;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer orderItemId;
+
+	private Integer quantity; // updatable entity by customer by increasing/decreasing
+
+	private Double discount;
+
+	private Double price;
+
+	private String status; // updatable entity by customer like CANCEL ITEM
+
+	@Column(name = "deliveryDate")
+	private LocalDateTime promisedDeliveryDate; // To be calculated based on distance OR defaultValue is +5 currentDate
+
+	@Column(name = "needDeliveryDate")
+	private LocalDateTime needDeliveryDate; // updatable entity by customer
 
 	@ManyToOne
 	@JoinColumn(name = "order_id", updatable = false)

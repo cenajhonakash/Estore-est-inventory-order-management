@@ -44,7 +44,7 @@ public class InventoryHelper {
 
 	public Item buildItemEntity(ItemRequestDto itemDto, ItemCategory category) {
 		return Item.builder().name(itemDto.name()).brand(itemDto.brand()).description(itemDto.description())
-				.image(itemDto.imageUrl()).discountPercent(itemDto.discountPercent()).price(itemDto.price())
+				.image(itemDto.imageUrl()).discountPercent(itemDto.discountPercent()).salePrice(itemDto.price())
 				.quantity(itemDto.quantity()).category(category).build();
 	}
 
@@ -58,7 +58,7 @@ public class InventoryHelper {
 		if (itemDto.name() != null)
 			item.setName(itemDto.name());
 		if (itemDto.price() != null)
-			item.setPrice(itemDto.price());
+			item.setSalePrice(itemDto.price());
 		if (itemDto.quantity() != null)
 			item.setQuantity(itemDto.quantity());
 		if (itemDto.imageUrl() != null)
@@ -84,7 +84,7 @@ public class InventoryHelper {
 			if (Objects.isNull(itemStockDto.updateDetail().orderDetails().orderNo())
 					|| Objects.isNull(itemStockDto.updateDetail().orderDetails().originalReqQty())
 					|| Objects.isNull(itemStockDto.updateDetail().orderDetails().fulfilledQty()))
-			validationFailed.add("No order information found for stock update.");
+				validationFailed.add("No order information found for stock update.");
 		}
 
 		if (Objects.isNull(itemStockDto.itemId()) || Objects.isNull(itemStockDto.storeNumber()))

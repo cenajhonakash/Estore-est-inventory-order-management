@@ -26,25 +26,29 @@ import lombok.Setter;
 @Entity
 @Table(name = "customer_order")
 public class Order {
-	
-    @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer orderId;
 
-    private String status;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer orderId;
+
+	@Column(nullable = false)
+	private String status;
+
 	private String paymentStatus;
-    private LocalDateTime createdDate;
-     
-    private String userId;
-    
-    /*
+	private String refundStatus;
+	private LocalDateTime createdDate;
+
+	@Column(nullable = false)
+	private String userId;
+
+	/*
 	 * need to add billing & delivery address in user-profile service.
 	 * userAddressCode = userId + addresId
 	 * {"phone":"","state":"","zip-code":"","billingAddress":"","email":""}
 	 */
-	@Column(columnDefinition = "JSON")
+	@Column(columnDefinition = "JSON", nullable = false)
 	private String userDetails;
-    
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+
+	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<OrderItem> orderItems;
 }
