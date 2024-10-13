@@ -69,6 +69,9 @@ public class Item {
 	@JoinColumn(name = "item_id")
 	List<ItemStock> itemStock;
 
+	@OneToMany(targetEntity = OrderItem.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	List<OrderItem> orderedItem;
+
 	@PrePersist
 	private void setAddedDate() {
 		this.addedDate = LocalDateTime.now();

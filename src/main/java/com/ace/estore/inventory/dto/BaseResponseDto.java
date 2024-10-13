@@ -1,5 +1,7 @@
 package com.ace.estore.inventory.dto;
 
-public abstract class BaseResponseDto {
+import java.io.Serializable;
+
+public abstract class BaseResponseDto implements Serializable {
 
 }

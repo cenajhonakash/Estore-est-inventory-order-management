@@ -121,16 +121,20 @@ public class OrderServiceImpl implements OrderService {
 
 	private OrderItem fulfillFromStore(Item item, OrderItemCreateRequestDto createItemDto)
 			throws PriceChangedForProductException {
-		if (item.getPrice() != createItemDto.cost()) {
+		if (item.getPrice().compareTo(createItemDto.cost()) != 0) {
 			throw new PriceChangedForProductException("Price has been changed for product: " + item.getName());
 		}
 		item.setQuantity(item.getQuantity() - createItemDto.quantity());
 		return OrderItem.builder().status(OrderItemStatusEnum.CREATED.name()).discount(createItemDto.discount())
-				.actualPrice(item.getPrice()).salePrice(createItemDto.salePrice()).quantity(createItemDto.quantity())
+				.actualPrice(item.getPrice())
+				.salePrice(appUtils.calculateDiscountedRate(item.getPrice(), createItemDto.discount()))
+				.quantity(createItemDto.quantity())
 				.needDeliveryDate(Objects.nonNull(createItemDto.needDelivery())
 						? appUtils.convertStringToLocalDateTimeMs(createItemDto.needDelivery())
 						: null)
-				.promisedDeliveryDate(appUtils.convertStringToLocalDateTimeMs(createItemDto.promisedDeliveryDate()))
+				.promisedDeliveryDate(Objects.nonNull(createItemDto.needDelivery())
+						? appUtils.convertStringToLocalDateTimeMs(createItemDto.promisedDeliveryDate())
+						: null)
 				.item(item).build();// item needs to be validated
 	}
 

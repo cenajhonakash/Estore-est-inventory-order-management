@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -52,16 +51,12 @@ public class OrderItem {
 	@Column(name = "needDeliveryDate")
 	private LocalDateTime needDeliveryDate; // updatable entity by customer
 
-	@ManyToOne
-	@JoinColumn(name = "order_id", updatable = false)
-	private Order order;
-
 	@OneToMany(targetEntity = OrderUpdateDetails.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "order_item_id")
 	private List<OrderUpdateDetails> orderUpdates;
 
-	@OneToOne
-	@JoinColumn(name = "product_id", updatable = true)
+	@ManyToOne
+	@JoinColumn(name = "item_id", updatable = false, insertable = true)
 	private Item item;
 
 	@PrePersist

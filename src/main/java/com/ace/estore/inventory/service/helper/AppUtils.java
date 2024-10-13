@@ -12,4 +12,8 @@ public class AppUtils {
 	public LocalDateTime convertStringToLocalDateTimeMs(String date) {
 		return LocalDateTime.parse(date, ApplicationConstants.DT_FORMATTER_MS);
 	}
+
+	public Double calculateDiscountedRate(Double costPrice, Double discount) {
+		return costPrice - (costPrice * discount / 100);
+	}
 }
