@@ -63,7 +63,7 @@ public class OrderServiceImpl implements OrderService {
 			try {
 				Item item = itemRepo.findById(product.productId()).orElseThrow(
 						() -> new ResourceNotFoundException("No product found with id: " + product.productId()));
-				if (item.getQuantity() > product.quantity()) { // fulfill from store
+				if (item.getQuantity() >= product.quantity()) { // fulfill from store
 					order.getOrderItems().add(fulfillFromStore(item, product));
 				} else {// fulfill from warehouse
 					order.getOrderItems().add(fulfillFromWareshouse(item, product));

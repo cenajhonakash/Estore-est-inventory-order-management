@@ -82,6 +82,6 @@ public class OrderHelper {
 		OrderResponseDto orderResponseDto = orderResponseMapper.entityToDto(createdOrder);
 		orderResponseDto
 				.setUserInfo(objectMapper.readValue(createdOrder.getUserDetails(), CustomerOrderUserDetailsDto.class));
-		return OrderResponseDto.builder().build();
+		return orderResponseDto;
 	}
 }
