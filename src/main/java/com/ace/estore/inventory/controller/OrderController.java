@@ -11,9 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.request.order.OrderCreateRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderUpdateRequestDto;
-import com.ace.estore.inventory.dto.response.order.OrderResponseDto;
+import com.ace.estore.inventory.exception.GeneralException;
 import com.ace.estore.inventory.exception.ValidationException;
 import com.ace.estore.inventory.service.OrderService;
 
@@ -25,19 +26,19 @@ public class OrderController {
 	private OrderService orderService;
 
 	@PostMapping
-	public ResponseEntity<OrderResponseDto> makeOrder(@RequestBody OrderCreateRequestDto orderCreateRequestDto)
-			throws ValidationException {
-		return new ResponseEntity<OrderResponseDto>(orderService.createOrder(orderCreateRequestDto), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> makeOrder(@RequestBody OrderCreateRequestDto orderCreateRequestDto)
+			throws ValidationException, GeneralException {
+		return new ResponseEntity<ApiResponse>(orderService.createOrder(orderCreateRequestDto), HttpStatus.OK);
 	}
 
 	@PutMapping
-	public ResponseEntity<OrderResponseDto> updateOrder(@RequestBody OrderUpdateRequestDto orderUpdateRequestDto)
-			throws ValidationException {
-		return new ResponseEntity<OrderResponseDto>(orderService.updateOrder(orderUpdateRequestDto), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> updateOrder(@RequestBody OrderUpdateRequestDto orderUpdateRequestDto)
+			throws ValidationException, GeneralException {
+		return new ResponseEntity<ApiResponse>(orderService.updateOrder(orderUpdateRequestDto), HttpStatus.OK);
 	}
 
 	@GetMapping("/{orderId}")
-	public ResponseEntity<OrderResponseDto> getOrder(@PathVariable Integer orderId) {
-		return new ResponseEntity<OrderResponseDto>(orderService.getOrder(orderId), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> getOrder(@PathVariable Integer orderId) throws GeneralException {
+		return new ResponseEntity<ApiResponse>(orderService.getOrder(orderId), HttpStatus.OK);
 	}
 }

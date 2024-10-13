@@ -7,7 +7,6 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(Include.NON_NULL)
-public record CustomerOrderUserDetailsDto(String phone, String state, String zipCode, String billingAddress,
-		String email) {
+public record ApiResponse(FailureResponse failure, BaseResponseDto data) {
 
 }

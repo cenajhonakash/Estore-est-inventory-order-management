@@ -4,28 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ace.estore.inventory.dto.mapper.StockUpdateDetailsMapper;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemStockRequestDto;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.entity.ItemCategory;
 import com.ace.estore.inventory.exception.ValidationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
 public class InventoryHelper {
-
-	@Autowired
-	private ObjectMapper objectMapper;
-	@Autowired
-	private StockUpdateDetailsMapper stockMapper;
 
 	public ItemCategory buildCategoryEntity(CategoryRequestDto categoryDto) {
 		return ItemCategory.builder().title(categoryDto.title()).description(categoryDto.description())
@@ -44,7 +36,7 @@ public class InventoryHelper {
 
 	public Item buildItemEntity(ItemRequestDto itemDto, ItemCategory category) {
 		return Item.builder().name(itemDto.name()).brand(itemDto.brand()).description(itemDto.description())
-				.image(itemDto.imageUrl()).discountPercent(itemDto.discountPercent()).salePrice(itemDto.price())
+				.image(itemDto.imageUrl()).discountPercent(itemDto.discountPercent()).price(itemDto.price())
 				.quantity(itemDto.quantity()).category(category).build();
 	}
 
@@ -58,7 +50,7 @@ public class InventoryHelper {
 		if (itemDto.name() != null)
 			item.setName(itemDto.name());
 		if (itemDto.price() != null)
-			item.setSalePrice(itemDto.price());
+			item.setPrice(itemDto.price());
 		if (itemDto.quantity() != null)
 			item.setQuantity(itemDto.quantity());
 		if (itemDto.imageUrl() != null)

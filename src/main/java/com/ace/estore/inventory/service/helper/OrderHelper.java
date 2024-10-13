@@ -4,14 +4,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ace.estore.inventory.dto.CustomerOrderUserDetailsDto;
+import com.ace.estore.inventory.dto.mapper.OrderItemResponseDtoMapper;
+import com.ace.estore.inventory.dto.mapper.OrderResponseDtoMapper;
+import com.ace.estore.inventory.dto.mapper.OrderUpdateDetailsResponseDtoMapper;
 import com.ace.estore.inventory.dto.request.order.OrderCreateRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderUpdateRequestDto;
+import com.ace.estore.inventory.dto.response.order.OrderResponseDto;
+import com.ace.estore.inventory.entity.Order;
 import com.ace.estore.inventory.exception.ValidationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class OrderHelper {
+	@Autowired
+	private ObjectMapper objectMapper;
+	@Autowired
+	private OrderResponseDtoMapper orderResponseMapper;
+	@Autowired
+	private OrderItemResponseDtoMapper orderItemResponseMapper;
+	@Autowired
+	private OrderUpdateDetailsResponseDtoMapper orderUpdateResponseMapper;
 
 	public void validateMandatoryAttributeForNewOrder(OrderCreateRequestDto orderCreateRequestDto)
 			throws ValidationException {
@@ -57,5 +75,13 @@ public class OrderHelper {
 					.isPresent())
 				validationErrors.add("No product id items to update");
 		}
+	}
+
+	public OrderResponseDto buildOrderResponse(Order createdOrder)
+			throws JsonMappingException, JsonProcessingException {
+		OrderResponseDto orderResponseDto = orderResponseMapper.entityToDto(createdOrder);
+		orderResponseDto
+				.setUserInfo(objectMapper.readValue(createdOrder.getUserDetails(), CustomerOrderUserDetailsDto.class));
+		return OrderResponseDto.builder().build();
 	}
 }

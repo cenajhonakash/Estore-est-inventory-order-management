@@ -9,7 +9,7 @@ import lombok.Builder;
 @JsonInclude(Include.NON_NULL)
 @Builder
 public record ItemResponseDto(@JsonAlias("id") Integer itemId, String name, String brand,
-		@JsonAlias("details") String description, Double salePrice, Double actualPrice,
-		@JsonAlias("discount") Double discountPercent, String image, String type) {
+		@JsonAlias("details") String description, Double price,
+		@JsonAlias("discount") Double discountPercent, Integer quantity, String image, String type) {
 
 }

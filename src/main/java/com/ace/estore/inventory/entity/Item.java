@@ -47,13 +47,10 @@ public class Item {
 	private String description;
 
 	@Column(nullable = false)
-	private Double salePrice;
-
-	@Column(nullable = false)
 	private Double discountPercent;
 
 	@Column(nullable = false)
-	private Double actualPrice;
+	private Double price;
 
 	@Column(nullable = false)
 	private Integer quantity; // available quantity
