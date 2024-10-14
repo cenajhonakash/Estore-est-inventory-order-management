@@ -8,6 +8,6 @@ import lombok.Builder;
 
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record OrderUpdateRequestDto(Integer orderNumber, String needDelivery, String userId,
-		CustomerDetailsDto userDetails, List<OrderItemCreateRequestDto> products) {
+public record OrderUpdateRequestDto(Integer orderNumber, String needDelivery, String userId, Boolean cancel,
+		CustomerDetailsDto userDetails, List<OrderItemUpdateRequestDto> products) {
 }

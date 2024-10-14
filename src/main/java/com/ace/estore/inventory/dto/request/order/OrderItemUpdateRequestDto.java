@@ -6,7 +6,7 @@ import lombok.Builder;
 
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record OrderItemUpdateRequestDto(Integer orderItemId, Integer quantity, String status, String refundStatus,
+public record OrderItemUpdateRequestDto(Integer productId, Integer quantity, String status, String refundStatus,
 		String needDelivery) {
 
 }

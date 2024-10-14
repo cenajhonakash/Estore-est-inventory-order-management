@@ -1,6 +1,8 @@
 package com.ace.estore.inventory.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,7 +37,7 @@ public class OrderItem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer orderItemId;
 
-	private Integer quantity; // updatable entity by customer by increasing/decreasing
+	private Integer quantity;
 
 	private Double actualPrice;
 
@@ -65,6 +67,9 @@ public class OrderItem {
 			this.needDeliveryDate = LocalDateTime.now().plusDays(5);
 		if (Objects.isNull(this.promisedDeliveryDate))
 			this.promisedDeliveryDate = this.needDeliveryDate;
-
+		if (Objects.isNull(this.orderUpdates)) {
+			this.orderUpdates = new ArrayList<>(Arrays.asList(
+					OrderUpdateDetails.builder().needDeliveryDate(this.needDeliveryDate).status(this.status).build()));
+		}
 	}
 }

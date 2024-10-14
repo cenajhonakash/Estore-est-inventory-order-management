@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,11 +28,15 @@ public class OrderUpdateDetails {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer orderUpdateId;
 
-	private Integer quantity; // +- quantity by customer
 	private String status; // Cancellation by customer
 	private LocalDateTime needDeliveryDate; // delivery date rescheduling by customer
-	@Column(columnDefinition = "JSON", nullable = false)
+	@Column(columnDefinition = "JSON")
 	private String userDetails; // delivery address change by customer
 
 	private LocalDateTime updatedTime;
+
+	@PrePersist
+	private void setUpdatedTime() {
+		this.updatedTime = LocalDateTime.now();
+	}
 }

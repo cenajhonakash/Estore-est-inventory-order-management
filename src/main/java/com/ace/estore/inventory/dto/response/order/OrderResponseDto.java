@@ -27,5 +27,5 @@ public class OrderResponseDto extends BaseResponseDto {
 	private String orderDate;
 	private String userId;
 	private CustomerOrderUserDetailsDto userInfo;
-	private List<OrderItemResponseDto> orderItems;
+	private List<OrderItemResponseDto> items;
 }

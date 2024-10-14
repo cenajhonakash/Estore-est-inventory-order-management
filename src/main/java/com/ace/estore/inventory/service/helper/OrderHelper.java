@@ -3,6 +3,7 @@ package com.ace.estore.inventory.service.helper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,8 +61,6 @@ public class OrderHelper {
 		List<String> validationErrors = new ArrayList<>();
 		if (Objects.isNull(orderUpdateRequestDto.userId()))
 			validationErrors.add("Missing user id");
-		if (Objects.isNull(orderUpdateRequestDto.orderNumber()))
-			validationErrors.add("Missing order number");
 		if (Objects.nonNull(orderUpdateRequestDto.userDetails())) {
 			if (Objects.isNull(orderUpdateRequestDto.userDetails().billingAddress())
 					&& Objects.isNull(orderUpdateRequestDto.userDetails().zipCode())
@@ -80,8 +79,11 @@ public class OrderHelper {
 	public OrderResponseDto buildOrderResponse(Order createdOrder)
 			throws JsonMappingException, JsonProcessingException {
 		OrderResponseDto orderResponseDto = orderResponseMapper.entityToDto(createdOrder);
+		orderResponseDto.setItems(createdOrder.getOrderItems().stream()
+				.map(item -> orderItemResponseMapper.entityToDto(item)).collect(Collectors.toList()));
 		orderResponseDto
 				.setUserInfo(objectMapper.readValue(createdOrder.getUserDetails(), CustomerOrderUserDetailsDto.class));
 		return orderResponseDto;
 	}
+
 }

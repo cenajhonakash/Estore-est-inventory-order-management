@@ -1,16 +1,22 @@
 package com.ace.estore.inventory.service.impl.order;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ace.estore.inventory.constants.OrderItemStatusEnum;
+import com.ace.estore.inventory.constants.OrderPaymentEnum;
 import com.ace.estore.inventory.constants.OrderStatusEnum;
 import com.ace.estore.inventory.dto.ApiResponse;
+import com.ace.estore.inventory.dto.BaseResponseDto;
 import com.ace.estore.inventory.dto.FailureResponse;
+import com.ace.estore.inventory.dto.request.order.CustomerDetailsDto;
 import com.ace.estore.inventory.dto.request.order.OrderCreateRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderItemCreateRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderUpdateRequestDto;
@@ -18,6 +24,7 @@ import com.ace.estore.inventory.dto.response.order.OrderResponseDto;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.entity.Order;
 import com.ace.estore.inventory.entity.OrderItem;
+import com.ace.estore.inventory.entity.OrderUpdateDetails;
 import com.ace.estore.inventory.exception.GeneralException;
 import com.ace.estore.inventory.exception.PriceChangedForProductException;
 import com.ace.estore.inventory.exception.ResourceNotFoundException;
@@ -28,6 +35,7 @@ import com.ace.estore.inventory.service.OrderService;
 import com.ace.estore.inventory.service.helper.AppUtils;
 import com.ace.estore.inventory.service.helper.OrderHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
@@ -68,6 +76,7 @@ public class OrderServiceImpl implements OrderService {
 				} else {// fulfill from warehouse
 					order.getOrderItems().add(fulfillFromWareshouse(item, product));
 				}
+
 			} catch (ResourceNotFoundException e) {
 				log.warn("Failure due to: " + e.getMessage());
 				warnings.add(e.getMessage());
@@ -86,13 +95,14 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			order.setUserDetails(mapper.writeValueAsString(orderCreateRequestDto.userDetails()));
 		} catch (JsonProcessingException e) {
-			log.error("Exception writing value");
+			log.error("Exception writing user details: " + orderCreateRequestDto.userDetails());
 			throw new GeneralException("Error while writing user details: " + orderCreateRequestDto.userDetails());
 		}
 		Order createdOrder = orderRepository.save(order);
 		OrderResponseDto response = null;
 		try {
 			response = helper.buildOrderResponse(createdOrder);
+			response.setUserInfo(null); // setting user info as null due to PI level data
 		} catch (JsonProcessingException e) {
 			/*
 			 * This block will send response if any case of failure while converting the
@@ -104,19 +114,94 @@ public class OrderServiceImpl implements OrderService {
 			errors.add("Cannot convert userInfo, Please ask user to update the address for order: "
 					+ createdOrder.getOrderId());
 		}
-		return ApiResponse.builder().failure(FailureResponse.builder().warnings(warnings).errors(errors).build())
-				.data(response).build();
+		return ApiResponse.builder().data(Arrays.asList(response)).build();
 	}
 
 	@Override
-	public ApiResponse updateOrder(OrderUpdateRequestDto orderUpdateRequestDto) throws ValidationException {
+	public ApiResponse updateOrder(OrderUpdateRequestDto orderUpdateRequestDto, Integer orderNumber)
+			throws ValidationException, ResourceNotFoundException {
 		helper.validateMandatoryAttributeForOrderUpdate(orderUpdateRequestDto);
-		return null;
+
+		Order order = orderRepository.findById(orderNumber)
+				.orElseThrow(() -> new ResourceNotFoundException("No order found with orderId: " + orderNumber));
+		if (order.getStatus().equalsIgnoreCase(OrderItemStatusEnum.CANCELLED.name()))
+			return ApiResponse.builder().failure(FailureResponse.builder()
+					.warnings(Arrays.asList("Cannot update order as it is already cancelled")).build()).build();
+		boolean anySD = order.getOrderItems().stream()
+				.filter(item -> item.getStatus().equalsIgnoreCase(OrderItemStatusEnum.SHIPPED.name())
+						|| item.getStatus().equalsIgnoreCase(OrderItemStatusEnum.DELIVERED.name()))
+				.findFirst().isPresent();
+		if (anySD)
+			return ApiResponse.builder()
+					.failure(FailureResponse.builder()
+							.warnings(
+									Arrays.asList("Cannot update order as few items are already shipped or delivered"))
+							.build())
+					.build();
+
+		List<String> warnings = new ArrayList<>();
+		List<String> errors = new ArrayList<>();
+
+		if (Objects.nonNull(orderUpdateRequestDto.cancel()) && orderUpdateRequestDto.cancel()) {
+			order.setStatus(OrderStatusEnum.CANCELLED.name());
+			order.getOrderItems().stream().forEach(item -> {
+				item.setStatus(OrderItemStatusEnum.CANCELLED.name());
+				item.getOrderUpdates()
+						.add(OrderUpdateDetails.builder().status(OrderItemStatusEnum.CANCELLED.name()).build());
+			});
+			order.setRefundStatus(OrderPaymentEnum.REFUND_INTITATED.name());
+		} else {
+			if (Objects.nonNull(orderUpdateRequestDto.needDelivery())) {
+				order.getOrderItems().stream().forEach(item -> {
+					LocalDateTime newDeliveryDate = appUtils
+							.convertStringToLocalDateTimeMs(orderUpdateRequestDto.needDelivery());
+					if (newDeliveryDate.getDayOfYear() > item.getPromisedDeliveryDate().getDayOfYear()) {
+						item.setNeedDeliveryDate(newDeliveryDate);
+						item.getOrderUpdates()
+								.add(OrderUpdateDetails.builder().needDeliveryDate(newDeliveryDate).build());
+					}
+				});
+			} else if (Objects.nonNull(orderUpdateRequestDto.userDetails()))
+				try {
+					CustomerDetailsDto newCustomerDetails = orderUpdateRequestDto.userDetails();
+					validateUpdateForCustomerDetails(newCustomerDetails, warnings);
+					if (warnings.isEmpty()) {
+						CustomerDetailsDto updatedCustomerDetailsDto = CustomerDetailsDto.builder()
+								.billingAddress(newCustomerDetails.billingAddress()).email(newCustomerDetails.email())
+								.phone(newCustomerDetails.phone()).state(newCustomerDetails.state())
+								.zipCode(newCustomerDetails.zipCode()).build();
+						String userInfo = mapper.writeValueAsString(updatedCustomerDetailsDto);
+						order.setUserDetails(userInfo);
+						order.getOrderItems().stream().forEach(orderItem -> orderItem.getOrderUpdates()
+								.add(OrderUpdateDetails.builder().userDetails(userInfo).build()));
+
+					}
+				} catch (JsonProcessingException e) {
+					warnings.add("Error while converting user details: " + order.getUserDetails());
+				}
+		}
+		if (warnings.isEmpty()) {
+			Order updatedOrder = orderRepository.save(order);
+			try {
+				OrderResponseDto orderResponseDto = helper.buildOrderResponse(updatedOrder);
+				return ApiResponse.builder().failure(FailureResponse.builder().build())
+						.data(Arrays.asList(orderResponseDto)).build();
+			} catch (JsonProcessingException e) {
+				errors.add("Error while converting user info " + updatedOrder.getUserDetails());
+				log.error("Error while converting to dto due to: {}", e.getMessage());
+			}
+		}
+		return ApiResponse.builder().failure(FailureResponse.builder().warnings(warnings).errors(errors).build())
+				.build();
 	}
 
 	@Override
-	public ApiResponse getOrder(Integer orderId) {
-		return null;
+	public ApiResponse getOrder(Integer orderId)
+			throws ResourceNotFoundException, JsonMappingException, JsonProcessingException {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new ResourceNotFoundException("No order with id: " + orderId));
+		OrderResponseDto orderResponseDto = helper.buildOrderResponse(order);
+		return ApiResponse.builder().data(Arrays.asList(orderResponseDto)).build();
 	}
 
 	private OrderItem fulfillFromStore(Item item, OrderItemCreateRequestDto createItemDto)
@@ -142,4 +227,39 @@ public class OrderServiceImpl implements OrderService {
 		return null;
 	}
 
+	@Override
+	public ApiResponse getCustomerOrder(String user) throws ResourceNotFoundException {
+		List<Order> orders = orderRepository.findAllByUserId(user);
+		List<String> error = new ArrayList<>();
+		List<BaseResponseDto> orderResponse = orders.stream().map(order -> {
+			try {
+				return helper.buildOrderResponse(order);
+			} catch (JsonProcessingException e) {
+				error.add(
+						"Cannot convert userInfo for order " + order.getOrderId() + " due to message" + e.getMessage());
+				return null;
+			}
+		}).filter(order -> Objects.nonNull(order)).collect(Collectors.toList());
+		return ApiResponse.builder().data(orderResponse).failure(FailureResponse.builder().errors(error).build())
+				.build();
+	}
+
+	@Override
+	public ApiResponse getOrdersForItem(Integer item) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void validateUpdateForCustomerDetails(CustomerDetailsDto newCustomerDetails, List<String> warnings) {
+		if (Objects.isNull(newCustomerDetails.billingAddress()))
+			warnings.add("Invalid billing address");
+		if (Objects.isNull(newCustomerDetails.phone()))
+			warnings.add("Invalid contact number");
+		if (Objects.isNull(newCustomerDetails.state()))
+			warnings.add("Invalid state");
+		if (Objects.isNull(newCustomerDetails.zipCode()))
+			warnings.add("Invalid zip code");
+		if (Objects.isNull(newCustomerDetails.email()))
+			warnings.add("Invalid email");
+	}
 }
