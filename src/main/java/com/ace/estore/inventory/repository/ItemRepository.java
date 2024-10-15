@@ -6,4 +6,6 @@ import com.ace.estore.inventory.entity.Item;
 
 public interface ItemRepository extends JpaRepository<Item, Integer> {
 
+//	@Query()
+//	List<OrderedItemDto> findAllOrderForItem(Integer item);
 }

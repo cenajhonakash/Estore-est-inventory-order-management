@@ -70,6 +70,7 @@ public class Item {
 	List<ItemStock> itemStock;
 
 	@OneToMany(targetEntity = OrderItem.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "item_id")
 	List<OrderItem> orderedItem;
 
 	@PrePersist
