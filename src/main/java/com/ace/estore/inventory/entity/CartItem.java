@@ -25,27 +25,27 @@ import lombok.Setter;
 @Table(name = "cart_item")
 public class CartItem {
 
-    @Id
+	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cartItemId;
-    
-    private  Integer quantity;
+	private Integer cartItemId;
+
+	private Integer quantity;
 
 	@Transient
-    private  Double itemTotal;
-        
+	private Double itemTotal;
+
 	/*
 	 * This field needs to be used if any cart item is not available. Use case: Want
 	 * to strike off items in UI at cart level
 	 */
-    @Transient
-	private Boolean requestQuantityNotAvailable;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
+	@Transient
+	private Boolean requestQuantityNotAvailable = Boolean.TRUE;
+
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "cart_id", updatable = false)
-    private Cart cart;
-    
-    @OneToOne
+	private Cart cart;
+
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "productId", updatable = false)
-    private Item item;
+	private Item item;
 }

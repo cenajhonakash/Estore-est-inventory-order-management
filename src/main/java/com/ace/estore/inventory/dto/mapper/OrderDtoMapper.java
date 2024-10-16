@@ -8,9 +8,9 @@ import com.ace.estore.inventory.dto.response.order.OrderResponseDto;
 import com.ace.estore.inventory.entity.Order;
 
 @Mapper(componentModel = "spring")
-public interface OrderResponseDtoMapper {
+public interface OrderDtoMapper {
 
-	OrderResponseDtoMapper INSTANCE = Mappers.getMapper(OrderResponseDtoMapper.class);
+	OrderDtoMapper INSTANCE = Mappers.getMapper(OrderDtoMapper.class);
 
 	@Mapping(target = "orderNumber", source = "orderId")
 	@Mapping(target = "payment", source = "paymentStatus")

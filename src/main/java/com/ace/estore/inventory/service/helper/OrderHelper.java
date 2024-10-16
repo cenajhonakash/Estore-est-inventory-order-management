@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ace.estore.inventory.dto.CustomerOrderUserDetailsDto;
-import com.ace.estore.inventory.dto.mapper.OrderItemResponseDtoMapper;
-import com.ace.estore.inventory.dto.mapper.OrderResponseDtoMapper;
-import com.ace.estore.inventory.dto.mapper.OrderUpdateDetailsResponseDtoMapper;
+import com.ace.estore.inventory.dto.mapper.OrderItemDtoMapper;
+import com.ace.estore.inventory.dto.mapper.OrderDtoMapper;
+import com.ace.estore.inventory.dto.mapper.OrderUpdateDetailsDtoMapper;
 import com.ace.estore.inventory.dto.request.order.OrderCreateRequestDto;
 import com.ace.estore.inventory.dto.request.order.OrderUpdateRequestDto;
 import com.ace.estore.inventory.dto.response.order.OrderResponseDto;
@@ -26,11 +26,11 @@ public class OrderHelper {
 	@Autowired
 	private ObjectMapper objectMapper;
 	@Autowired
-	private OrderResponseDtoMapper orderResponseMapper;
+	private OrderDtoMapper orderResponseMapper;
 	@Autowired
-	private OrderItemResponseDtoMapper orderItemResponseMapper;
+	private OrderItemDtoMapper orderItemResponseMapper;
 	@Autowired
-	private OrderUpdateDetailsResponseDtoMapper orderUpdateResponseMapper;
+	private OrderUpdateDetailsDtoMapper orderUpdateResponseMapper;
 
 	public void validateMandatoryAttributeForNewOrder(OrderCreateRequestDto orderCreateRequestDto)
 			throws ValidationException {

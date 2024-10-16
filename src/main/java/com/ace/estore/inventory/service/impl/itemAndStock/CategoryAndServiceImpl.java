@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ace.estore.inventory.dto.mapper.CategoryResponseDtoMapper;
-import com.ace.estore.inventory.dto.mapper.ItemResponseDtoMapper;
+import com.ace.estore.inventory.dto.mapper.CategoryDtoMapper;
+import com.ace.estore.inventory.dto.mapper.ItemDtoMapper;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.response.CategoryResponseDto;
@@ -35,9 +35,9 @@ public class CategoryAndServiceImpl implements CategoryAndItemService {
 	private InventoryHelper helper;
 
 	@Autowired
-	private CategoryResponseDtoMapper categoryMapper;
+	private CategoryDtoMapper categoryMapper;
 	@Autowired
-	private ItemResponseDtoMapper itemMapper;
+	private ItemDtoMapper itemMapper;
 
 	@Override
 	@Transactional(rollbackOn = Exception.class)

@@ -8,8 +8,8 @@ import com.ace.estore.inventory.dto.response.CategoryResponseDto;
 import com.ace.estore.inventory.entity.ItemCategory;
 
 @Mapper(componentModel = "spring")
-public interface CategoryResponseDtoMapper {
-	CategoryResponseDtoMapper INSTANCE = Mappers.getMapper(CategoryResponseDtoMapper.class);
+public interface CategoryDtoMapper {
+	CategoryDtoMapper INSTANCE = Mappers.getMapper(CategoryDtoMapper.class);
 
 	@Mapping(target = "id", source = "category.categoryId")
 	@Mapping(target = "products", source = "category.items")

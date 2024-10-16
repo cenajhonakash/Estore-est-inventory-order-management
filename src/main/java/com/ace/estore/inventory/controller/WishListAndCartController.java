@@ -1,5 +1,7 @@
 package com.ace.estore.inventory.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,16 +14,20 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.request.wac.CartItemRequestDto;
 import com.ace.estore.inventory.dto.request.wac.WishItemRequestDto;
+import com.ace.estore.inventory.exception.ResourceNotFoundException;
+import com.ace.estore.inventory.service.CartService;
 
 @RestController
 @RequestMapping("/v1/wac")
 public class WishListAndCartController {
 
+	@Autowired
+	private CartService cartService;
+
 	@PostMapping("/{userId}")
 	public ResponseEntity<ApiResponse> addItemToCart(@PathVariable String userId,
-			@RequestBody CartItemRequestDto request) {
-		return null;
-
+			@RequestBody CartItemRequestDto cartItemRequest) throws ResourceNotFoundException {
+		return new ResponseEntity<ApiResponse>(cartService.addItemToCart(userId, cartItemRequest), HttpStatus.OK);
 	}
 
 	@PostMapping("/{userId}")
