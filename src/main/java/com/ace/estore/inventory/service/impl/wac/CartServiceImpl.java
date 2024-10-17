@@ -20,6 +20,7 @@ import com.ace.estore.inventory.entity.Cart;
 import com.ace.estore.inventory.entity.CartItem;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.exception.ResourceNotFoundException;
+import com.ace.estore.inventory.exception.ValidationException;
 import com.ace.estore.inventory.repository.CartRepository;
 import com.ace.estore.inventory.repository.ItemRepository;
 import com.ace.estore.inventory.service.CartService;
@@ -47,7 +48,10 @@ public class CartServiceImpl implements CartService {
 	@Override
 	@Transactional
 	public ApiResponse addItemToCart(String userId, CartItemRequestDto cartRequestDto)
-			throws ResourceNotFoundException {
+			throws ResourceNotFoundException, ValidationException {
+		if (cartRequestDto.quanity() < 1)
+			throw new ValidationException("Quantity is less than or equals 0");
+
 		Item item = itemRepo.findById(cartRequestDto.productId()).orElseThrow(
 				() -> new ResourceNotFoundException("No product found with id: " + cartRequestDto.productId()));
 
@@ -61,7 +65,7 @@ public class CartServiceImpl implements CartService {
 					.build();
 		} else {
 			cart = cartOpt.get();
-			cart.getItems().add(CartItem.builder().item(item).quantity(cartRequestDto.quanity()).build());
+			cart.getItems().add(CartItem.builder().item(item).cart(cart).quantity(cartRequestDto.quanity()).build());
 		}
 		Cart savedCart = cartRepository.save(cart);
 		return ApiResponse.builder().data(Arrays.asList(prepareCartResponse(savedCart))).build();

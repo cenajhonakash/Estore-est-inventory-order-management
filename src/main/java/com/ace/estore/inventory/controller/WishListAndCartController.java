@@ -15,6 +15,7 @@ import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.request.wac.CartItemRequestDto;
 import com.ace.estore.inventory.dto.request.wac.WishItemRequestDto;
 import com.ace.estore.inventory.exception.ResourceNotFoundException;
+import com.ace.estore.inventory.exception.ValidationException;
 import com.ace.estore.inventory.service.CartService;
 
 @RestController
@@ -26,11 +27,11 @@ public class WishListAndCartController {
 
 	@PostMapping("/{userId}")
 	public ResponseEntity<ApiResponse> addItemToCart(@PathVariable String userId,
-			@RequestBody CartItemRequestDto cartItemRequest) throws ResourceNotFoundException {
+			@RequestBody CartItemRequestDto cartItemRequest) throws ResourceNotFoundException, ValidationException {
 		return new ResponseEntity<ApiResponse>(cartService.addItemToCart(userId, cartItemRequest), HttpStatus.OK);
 	}
 
-	@PostMapping("/{userId}")
+	@PostMapping("/wl/{userId}")
 	public ResponseEntity<ApiResponse> addItemToWishlist(@PathVariable String userId,
 			@RequestBody WishItemRequestDto request) {
 		return null;
@@ -42,7 +43,7 @@ public class WishListAndCartController {
 		return null;
 	}
 
-	@DeleteMapping("/{userId}/items/{itemId}")
+	@DeleteMapping("/wl/{userId}/items/{itemId}")
 	public ResponseEntity<ApiResponse> removeItemFromWishList(@PathVariable String userId,
 			@PathVariable Integer itemId) {
 		return null;
@@ -54,7 +55,7 @@ public class WishListAndCartController {
 		return null;
 	}
 
-	@DeleteMapping("/{userId}")
+	@DeleteMapping("/wl/{userId}")
 	public ResponseEntity<ApiResponse> clearWishList(@PathVariable String userId) {
 
 		return null;
@@ -65,6 +66,7 @@ public class WishListAndCartController {
 		return null;
 	}
 
+	@GetMapping("/wl/{userId}")
 	public ResponseEntity<ApiResponse> getWishList(@PathVariable String userId) {
 		return null;
 	}
