@@ -9,6 +9,6 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(Include.NON_NULL)
-public record ApiResponse(List<BaseResponseDto> data, FailureResponse failure) {
+public record ApiResponse(List<BaseResponseDto> data, FailureResponse failure, String message) {
 
 }

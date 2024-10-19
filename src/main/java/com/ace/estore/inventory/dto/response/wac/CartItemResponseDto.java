@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(Include.NON_NULL)
 public class CartItemResponseDto {
+	private Integer itemId;
 	private Integer quantity;
 	private Double itemTotal;
 	private Boolean available;

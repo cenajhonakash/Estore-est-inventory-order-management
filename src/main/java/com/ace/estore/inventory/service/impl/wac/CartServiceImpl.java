@@ -3,6 +3,7 @@ package com.ace.estore.inventory.service.impl.wac;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import com.ace.estore.inventory.entity.CartItem;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.exception.ResourceNotFoundException;
 import com.ace.estore.inventory.exception.ValidationException;
+import com.ace.estore.inventory.repository.CartItemRepository;
 import com.ace.estore.inventory.repository.CartRepository;
 import com.ace.estore.inventory.repository.ItemRepository;
 import com.ace.estore.inventory.service.CartService;
@@ -35,6 +37,8 @@ public class CartServiceImpl implements CartService {
 
 	@Autowired
 	private CartRepository cartRepository;
+	@Autowired
+	private CartItemRepository cartItemRepository;
 	@Autowired
 	private ItemRepository itemRepo;
 
@@ -65,26 +69,46 @@ public class CartServiceImpl implements CartService {
 					.build();
 		} else {
 			cart = cartOpt.get();
-			cart.getItems().add(CartItem.builder().item(item).cart(cart).quantity(cartRequestDto.quanity()).build());
+//			cart.getItems().add(CartItem.builder().item(item).cart(cart).quantity(cartRequestDto.quanity()).build());
+			cart.getItems().add(CartItem.builder().item(item).quantity(cartRequestDto.quanity()).build());
 		}
 		Cart savedCart = cartRepository.save(cart);
 		return ApiResponse.builder().data(Arrays.asList(prepareCartResponse(savedCart))).build();
 	}
 
 	@Override
-	public void removeItemFromCart(String userId, int cartItem) {
+	@Transactional
+	public ApiResponse removeItemFromCart(String userId, Integer cartItemId)
+			throws ResourceNotFoundException, ValidationException {
 
+		Cart userCart = cartRepository.findByUserId(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("No cart available for user: " + userId));
+
+		Optional<CartItem> anyItem = userCart.getItems().stream()
+				.filter(item -> Objects.nonNull(item) && item.getCartItemId().equals(cartItemId)).findFirst();
+		if (anyItem.isEmpty())
+			throw new ValidationException("Cart item doesn't belong to user");
+
+		userCart.getItems().remove(anyItem.get());
+
+		Cart updatedCart = cartRepository.saveAndFlush(userCart);
+
+		return ApiResponse.builder().data(Arrays.asList(prepareCartResponse(updatedCart))).build();
 	}
 
 	@Override
-	public void clearCart(String userId) {
-
+	public ApiResponse clearCart(String userId) throws ResourceNotFoundException {
+		Cart userCart = cartRepository.findByUserId(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("No cart available for user: " + userId));
+		cartRepository.delete(userCart);
+		return ApiResponse.builder().message("success").build();
 	}
 
 	@Override
-	public ApiResponse getCartForUser(String userId) {
-
-		return null;
+	public ApiResponse getCartForUser(String userId) throws ResourceNotFoundException {
+		Cart userCart = cartRepository.findByUserId(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("No cart available for user: " + userId));
+		return ApiResponse.builder().data(Arrays.asList(prepareCartResponse(userCart))).build();
 	}
 
 	private CartResponseDto prepareCartResponse(Cart savedCart) {

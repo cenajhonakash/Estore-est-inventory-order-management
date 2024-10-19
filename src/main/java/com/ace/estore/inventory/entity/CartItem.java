@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -41,11 +40,7 @@ public class CartItem {
 	@Transient
 	private Boolean requestQuantityNotAvailable = Boolean.TRUE;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cart_id", updatable = false)
-	private Cart cart;
-
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "productId", updatable = false)
+	@JoinColumn(name = "productId", updatable = false, nullable = false)
 	private Item item;
 }

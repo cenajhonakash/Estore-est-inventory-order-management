@@ -12,6 +12,7 @@ public interface CartItemDtoMapper {
 
 	CartItemDtoMapper INSTANCE = Mappers.getMapper(CartItemDtoMapper.class);
 
+	@Mapping(target = "itemId", source = "cartItemId")
 	@Mapping(target = "name", source = "item.name")
 	@Mapping(target = "brand", source = "item.brand")
 	@Mapping(target = "price", source = "item.price")

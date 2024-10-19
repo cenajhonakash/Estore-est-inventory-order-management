@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,21 +39,21 @@ public class WishListAndCartController {
 
 	}
 
-	@DeleteMapping("/{userId}/items/{itemId}")
-	public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable String userId, @PathVariable Integer itemId) {
-		return null;
+	@PutMapping("/{userId}/items/{itemId}")
+	public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable String userId, @PathVariable Integer itemId)
+			throws ResourceNotFoundException, ValidationException {
+		return new ResponseEntity<ApiResponse>(cartService.removeItemFromCart(userId, itemId), HttpStatus.OK);
 	}
 
-	@DeleteMapping("/wl/{userId}/items/{itemId}")
+	@PutMapping("/wl/{userId}/items/{itemId}")
 	public ResponseEntity<ApiResponse> removeItemFromWishList(@PathVariable String userId,
 			@PathVariable Integer itemId) {
 		return null;
 	}
 
 	@DeleteMapping("/{userId}")
-	public ResponseEntity<ApiResponse> clearCart(@PathVariable String userId) {
-
-		return null;
+	public ResponseEntity<ApiResponse> clearCart(@PathVariable String userId) throws ResourceNotFoundException {
+		return new ResponseEntity<ApiResponse>(cartService.clearCart(userId), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/wl/{userId}")
@@ -62,8 +63,8 @@ public class WishListAndCartController {
 	}
 
 	@GetMapping("/{userId}")
-	public ResponseEntity<ApiResponse> getCart(@PathVariable String userId) {
-		return null;
+	public ResponseEntity<ApiResponse> getCart(@PathVariable String userId) throws ResourceNotFoundException {
+		return new ResponseEntity<ApiResponse>(cartService.getCartForUser(userId), HttpStatus.OK);
 	}
 
 	@GetMapping("/wl/{userId}")
