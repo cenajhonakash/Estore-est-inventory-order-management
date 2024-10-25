@@ -10,7 +10,7 @@ public interface CartService {
 	ApiResponse addItemToCart(String userId, CartItemRequestDto cartRequestDto)
 			throws ValidationException, ResourceNotFoundException;
 
-	ApiResponse removeItemFromCart(String userId, Integer cartItem)
+	ApiResponse removeItemFromCart(String userId, Integer cartItem, Integer qty)
 			throws ResourceNotFoundException, ValidationException;
 
 	ApiResponse clearCart(String userId) throws ResourceNotFoundException;

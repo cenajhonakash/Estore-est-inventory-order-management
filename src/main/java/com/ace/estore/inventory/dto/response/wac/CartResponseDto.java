@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartResponseDto extends BaseResponseDto {
-	private String id;
+	private String cartId;
 	private String user;
 	private Double cartValue;
 	List<CartItemResponseDto> products;

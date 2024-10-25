@@ -22,7 +22,6 @@ import com.ace.estore.inventory.entity.CartItem;
 import com.ace.estore.inventory.entity.Item;
 import com.ace.estore.inventory.exception.ResourceNotFoundException;
 import com.ace.estore.inventory.exception.ValidationException;
-import com.ace.estore.inventory.repository.CartItemRepository;
 import com.ace.estore.inventory.repository.CartRepository;
 import com.ace.estore.inventory.repository.ItemRepository;
 import com.ace.estore.inventory.service.CartService;
@@ -38,8 +37,6 @@ public class CartServiceImpl implements CartService {
 	@Autowired
 	private CartRepository cartRepository;
 	@Autowired
-	private CartItemRepository cartItemRepository;
-	@Autowired
 	private ItemRepository itemRepo;
 
 	@Autowired
@@ -53,7 +50,7 @@ public class CartServiceImpl implements CartService {
 	@Transactional
 	public ApiResponse addItemToCart(String userId, CartItemRequestDto cartRequestDto)
 			throws ResourceNotFoundException, ValidationException {
-		if (cartRequestDto.quanity() < 1)
+		if (cartRequestDto.quantity() < 1)
 			throw new ValidationException("Quantity is less than or equals 0");
 
 		Item item = itemRepo.findById(cartRequestDto.productId()).orElseThrow(
@@ -65,12 +62,25 @@ public class CartServiceImpl implements CartService {
 			log.info("Creating new cart for user: {}", userId);
 			cart = Cart.builder().userId(userId)
 					.items(new ArrayList<>(
-							Arrays.asList(CartItem.builder().item(item).quantity(cartRequestDto.quanity()).build())))
+							Arrays.asList(CartItem.builder().item(item).quantity(cartRequestDto.quantity()).build())))
 					.build();
 		} else {
 			cart = cartOpt.get();
-//			cart.getItems().add(CartItem.builder().item(item).cart(cart).quantity(cartRequestDto.quanity()).build());
-			cart.getItems().add(CartItem.builder().item(item).quantity(cartRequestDto.quanity()).build());
+			/*
+			 * Increasing quantity of item in cart
+			 */
+			Optional<Boolean> anyQtyIncreased = cart.getItems().stream().map(it -> {
+				if (it.getItem().getItemId() == cartRequestDto.productId()) {
+					log.info("Item: {} quantity increased", it.getItem().getItemId());
+					it.setQuantity(it.getQuantity() + cartRequestDto.quantity());
+					return true;
+				}
+				return false;
+			}).filter(qtyIncreased -> qtyIncreased).findFirst();
+
+			if (anyQtyIncreased.isEmpty()) {
+				cart.getItems().add(CartItem.builder().item(item).quantity(cartRequestDto.quantity()).build());
+			}
 		}
 		Cart savedCart = cartRepository.save(cart);
 		return ApiResponse.builder().data(Arrays.asList(prepareCartResponse(savedCart))).build();
@@ -78,7 +88,7 @@ public class CartServiceImpl implements CartService {
 
 	@Override
 	@Transactional
-	public ApiResponse removeItemFromCart(String userId, Integer cartItemId)
+	public ApiResponse removeItemFromCart(String userId, Integer cartItemId, Integer qty)
 			throws ResourceNotFoundException, ValidationException {
 
 		Cart userCart = cartRepository.findByUserId(userId)
@@ -87,9 +97,34 @@ public class CartServiceImpl implements CartService {
 		Optional<CartItem> anyItem = userCart.getItems().stream()
 				.filter(item -> Objects.nonNull(item) && item.getCartItemId().equals(cartItemId)).findFirst();
 		if (anyItem.isEmpty())
-			throw new ValidationException("Cart item doesn't belong to user");
+			throw new ValidationException("Cart item doesn't belong to user: " + userId);
 
-		userCart.getItems().remove(anyItem.get());
+		if (Objects.nonNull(qty)) {
+			AtomicReference<Boolean> validationFailed = new AtomicReference<>(false);
+			userCart.getItems().stream().map(ci -> {
+				if (ci.getCartItemId() == cartItemId) {
+					if (ci.getQuantity() < qty) {
+						log.info("Item quantity: {} cannot be decreased more than requested quantity: {}",
+								ci.getQuantity(), qty);
+						validationFailed.set(true);
+						return true;
+					}
+					Integer newQty = ci.getQuantity() - qty;
+					if (newQty == 0)
+						userCart.getItems().remove(ci);
+					else
+						ci.setQuantity(newQty);
+					return true;
+				}
+				return false;
+			}).filter(cartItemFound -> cartItemFound).findFirst();
+
+			if (validationFailed.get())
+				throw new ValidationException(
+						"Requested quantity to decrease item quantity is more than actual quantity: " + qty);
+		} else {
+			userCart.getItems().remove(anyItem.get());
+		}
 
 		Cart updatedCart = cartRepository.saveAndFlush(userCart);
 

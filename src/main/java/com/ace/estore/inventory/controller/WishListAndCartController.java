@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ace.estore.inventory.dto.ApiResponse;
@@ -40,9 +41,10 @@ public class WishListAndCartController {
 	}
 
 	@PutMapping("/{userId}/items/{itemId}")
-	public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable String userId, @PathVariable Integer itemId)
+	public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable String userId, @PathVariable Integer itemId,
+			@RequestParam(required = false, name = "qty") Integer qty)
 			throws ResourceNotFoundException, ValidationException {
-		return new ResponseEntity<ApiResponse>(cartService.removeItemFromCart(userId, itemId), HttpStatus.OK);
+		return new ResponseEntity<ApiResponse>(cartService.removeItemFromCart(userId, itemId, qty), HttpStatus.OK);
 	}
 
 	@PutMapping("/wl/{userId}/items/{itemId}")
