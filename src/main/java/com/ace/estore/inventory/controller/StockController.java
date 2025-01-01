@@ -32,22 +32,18 @@ public class StockController {
 	public ResponseEntity<ItemStockDto> addItemStock(@RequestBody ItemStockRequestDto itemStockRequestDto)
 			throws ResourceExistsException, GeneralException, ResourceNotFoundException, ValidationException {
 		ItemStockDto dto = itemStockService.addItemStock(itemStockRequestDto);
-		return new ResponseEntity<ItemStockDto>(dto,
-				HttpStatus.OK);
+		return new ResponseEntity<ItemStockDto>(dto, HttpStatus.OK);
 	}
 
 	@PutMapping
-	public ResponseEntity<ItemStockDto> updateItemStock(
-			@RequestBody ItemStockRequestDto itemStockRequestDto)
+	public ResponseEntity<ItemStockDto> updateItemStock(@RequestBody ItemStockRequestDto itemStockRequestDto)
 			throws GeneralException, ResourceNotFoundException, ValidationException {
-		return new ResponseEntity<ItemStockDto>(itemStockService.updateItemStock(itemStockRequestDto),
-				HttpStatus.OK);
+		return new ResponseEntity<ItemStockDto>(itemStockService.updateItemStock(itemStockRequestDto), HttpStatus.OK);
 	}
 
-	@GetMapping
+	@GetMapping("/item")
 	public ResponseEntity<List<ItemStockDto>> getItemStock(@RequestParam(required = false) Integer itemId,
 			@RequestParam(required = false) String store) throws ResourceNotFoundException {
-		return new ResponseEntity<List<ItemStockDto>>(itemStockService.getItemStock(itemId, store),
-				HttpStatus.OK);
+		return new ResponseEntity<List<ItemStockDto>>(itemStockService.getItemStock(itemId, store), HttpStatus.OK);
 	}
 }
