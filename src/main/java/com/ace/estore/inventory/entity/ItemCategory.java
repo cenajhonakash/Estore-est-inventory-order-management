@@ -28,23 +28,23 @@ import lombok.Setter;
 @Entity
 @Table(name = "item_category")
 public class ItemCategory {
-	
-    @Id
-    @Column(name = "id")
+
+	@Id
+	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer categoryId;
+	private Integer categoryId;
 
 	@Column(name = "category_title", length = 60, nullable = false, unique = true)
-    private String title;
+	private String title;
 
-    @Column(name = "category_desc", length = 500)
-    private String description;
+	@Column(name = "category_desc", length = 500)
+	private String description;
 
-    private LocalDateTime createdDate;
+	private LocalDateTime createdDate;
 	private LocalDateTime updatedDate;
-    
+
 	private String coverImage;
-    
+
 	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<Item> items;
 

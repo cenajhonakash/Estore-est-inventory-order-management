@@ -1,10 +1,13 @@
 package com.ace.estore.inventory.service.impl.itemAndStock;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.mapper.CategoryDtoMapper;
 import com.ace.estore.inventory.dto.mapper.ItemDtoMapper;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
@@ -115,14 +118,20 @@ public class CategoryAndServiceImpl implements CategoryAndItemService {
 	}
 
 	@Override
-	public String deleteCategory(Integer categoryId) {
+	public ApiResponse deleteCategory(Integer categoryId) {
 		categoryRepo.deleteById(categoryId);
-		return "Deleted";
+		return ApiResponse.builder().message("DELETED").build();
 	}
 
 	@Override
-	public String deleteItem(Integer itemId) {
+	public ApiResponse deleteItem(Integer itemId) {
 		itemRepo.deleteById(itemId);
-		return "Deleted";
+		return ApiResponse.builder().message("DELETED").build();
+	}
+
+	@Override
+	public List<CategoryResponseDto> getCategories() throws ResourceNotFoundException {
+		return categoryRepo.findAll().stream().map(cat -> categoryMapper.mapItemCategoryToDto(cat))
+				.collect(Collectors.toList());
 	}
 }

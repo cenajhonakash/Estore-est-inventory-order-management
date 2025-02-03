@@ -1,5 +1,7 @@
 package com.ace.estore.inventory.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.response.CategoryResponseDto;
@@ -22,6 +25,7 @@ import com.ace.estore.inventory.service.CategoryAndItemService;
 
 @RestController
 @RequestMapping("/v1/inventory")
+//@CrossOrigin("*")
 public class InventoryItemController {
 
 	@Autowired
@@ -33,6 +37,11 @@ public class InventoryItemController {
 		return new ResponseEntity<CategoryResponseDto>(categoryAndItemService.addCategory(category), HttpStatus.OK);
 	}
 
+	@GetMapping("/category")
+	public ResponseEntity<List<CategoryResponseDto>> getCategories() throws ResourceNotFoundException {
+		return new ResponseEntity<>(categoryAndItemService.getCategories(), HttpStatus.OK);
+	}
+
 	@GetMapping("/category/{id}")
 	public ResponseEntity<CategoryResponseDto> getCategory(@PathVariable("id") Integer categoryId)
 			throws ResourceNotFoundException {
@@ -41,16 +50,15 @@ public class InventoryItemController {
 
 	@PutMapping("/category/{id}")
 	public ResponseEntity<CategoryResponseDto> updateCategory(@RequestBody CategoryRequestDto category,
-			@PathVariable("id") Integer categoryId)
-			throws ResourceNotFoundException, ResourceExistsException {
+			@PathVariable("id") Integer categoryId) throws ResourceNotFoundException, ResourceExistsException {
 		return new ResponseEntity<CategoryResponseDto>(categoryAndItemService.updateCategory(category, categoryId),
 				HttpStatus.OK);
 	}
 
 	@DeleteMapping("/category/{id}")
-	public ResponseEntity<String> deleteCategory(@PathVariable("id") Integer categoryId)
+	public ResponseEntity<ApiResponse> deleteCategory(@PathVariable("id") Integer categoryId)
 			throws ResourceNotFoundException {
-		return new ResponseEntity<String>(categoryAndItemService.deleteCategory(categoryId), HttpStatus.OK);
+		return new ResponseEntity<ApiResponse>(categoryAndItemService.deleteCategory(categoryId), HttpStatus.OK);
 	}
 
 	@PostMapping("/item")
@@ -72,7 +80,7 @@ public class InventoryItemController {
 	}
 
 	@DeleteMapping("/item/{id}")
-	public ResponseEntity<String> deleteItem(@PathVariable("id") Integer itemId) throws ResourceNotFoundException {
-		return new ResponseEntity<String>(categoryAndItemService.deleteItem(itemId), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> deleteItem(@PathVariable("id") Integer itemId) throws ResourceNotFoundException {
+		return new ResponseEntity<ApiResponse>(categoryAndItemService.deleteItem(itemId), HttpStatus.OK);
 	}
 }

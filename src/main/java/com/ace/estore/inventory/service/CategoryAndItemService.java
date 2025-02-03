@@ -1,5 +1,8 @@
 package com.ace.estore.inventory.service;
 
+import java.util.List;
+
+import com.ace.estore.inventory.dto.ApiResponse;
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
 import com.ace.estore.inventory.dto.response.CategoryResponseDto;
@@ -15,6 +18,8 @@ public interface CategoryAndItemService {
 
 	CategoryResponseDto getCategory(Integer categoryId) throws ResourceNotFoundException;
 
+	List<CategoryResponseDto> getCategories() throws ResourceNotFoundException;
+
 	ItemResponseDto getItem(Integer itemId) throws ResourceNotFoundException;
 
 	CategoryResponseDto updateCategory(CategoryRequestDto category, Integer categoryId)
@@ -22,7 +27,7 @@ public interface CategoryAndItemService {
 
 	ItemResponseDto updateItem(ItemRequestDto item, Integer itemId) throws ResourceNotFoundException;
 
-	String deleteCategory(Integer categoryId);
+	ApiResponse deleteCategory(Integer categoryId);
 
-	String deleteItem(Integer itemId);
+	ApiResponse deleteItem(Integer itemId);
 }

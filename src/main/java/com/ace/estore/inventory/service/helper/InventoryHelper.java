@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.ace.estore.inventory.dto.request.inventory.CategoryRequestDto;
 import com.ace.estore.inventory.dto.request.inventory.ItemRequestDto;
@@ -25,11 +26,11 @@ public class InventoryHelper {
 	}
 
 	public ItemCategory updateItemCategory(CategoryRequestDto categoryDto, ItemCategory itemCategory) {
-		if (categoryDto.coverImage() != null)
+		if (StringUtils.hasLength(categoryDto.coverImage()))
 			itemCategory.setCoverImage(categoryDto.coverImage());
-		if (categoryDto.description() != null)
+		if (StringUtils.hasLength(categoryDto.description()))
 			itemCategory.setDescription(categoryDto.description());
-		if (categoryDto.title() != null)
+		if (StringUtils.hasLength(categoryDto.title()))
 			itemCategory.setTitle(categoryDto.title());
 		return itemCategory;
 	}
